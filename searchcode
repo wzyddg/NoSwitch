@@ -1,0 +1,3 @@
+按照搜索API可以使用布尔表达式，需要url编码
+https://searchcode.com/api/codesearch_I/?q=(arrays AND i++) lang:python
+URL编码即可，语言过滤不支持多语言
