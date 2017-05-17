@@ -2,7 +2,7 @@ var express = require('express');
 var mongoClient = require('mongodb').MongoClient;
 var router = express.Router();
 var test = require("assert");
-var dao = require('../utilities/mongoDAO');
+var dao = require('../utilities/MongoDAO');
 var url=require("url");
 
 /* GET users listing. */
