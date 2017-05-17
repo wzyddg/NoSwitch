@@ -1,0 +1,1 @@
+mongod --dbpath /Users/wzy/Desktop/mongodata
