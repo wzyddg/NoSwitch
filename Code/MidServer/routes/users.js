@@ -9,7 +9,8 @@ var url=require("url");
 var authedDB = null;
 
 router.get('/', function(req, res, next) {
-    dao.insert("222","3dd",{"you":["are","damned"]}).then((data)=>{
+    // dao.insert("222","3dd",{"you":["are","66666"]}).then((data)=>{
+        dao.findAll().then((data)=>{
         if(data){
             res.send(data);
         }else{
