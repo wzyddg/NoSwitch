@@ -23,6 +23,7 @@ router.get("/",function (req, res, next) {
         }
     }).catch((error)=>{
         console.log(error);
+        res.writeHead(500,{'Content-Type' : 'application/json'});
         res.write({"result":"server error"});
         res.end();
     });

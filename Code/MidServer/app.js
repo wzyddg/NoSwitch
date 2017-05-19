@@ -7,6 +7,7 @@ var bodyParser = require('body-parser');
 
 var search = require('./routes/search');
 var update = require('./routes/update')
+var dbo = require('./utilities/DatabaseOperator');
 
 var app = express();
 
@@ -44,5 +45,11 @@ app.use(function(err, req, res, next) {
 });
 
 //you need a automatic content updater here ,lets say 15 days
+setInterval(autoUpdate,15*24*60*60*1000);
 
 module.exports = app;
+
+function autoUpdate() {
+    dbo.fetchAndUpdateAll();
+    console.log("auto update started");
+}

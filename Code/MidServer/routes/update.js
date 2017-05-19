@@ -11,17 +11,11 @@ router.get("/one",function (req, res, next){
         page = 0;
     }
 
-    dao.find(query,page).then((data)=>{
-        if(data){
-            dbo.fetchAndUpdate(query,page,data).then((result)=>{
-                if(!result && result==={} && result === '{}'){
-                    res.send({"result":"failed"});
-                }else{
-                    res.send({"result":"successful"});
-                }
-            })
-        }else {
-            res.send({"result":"nothing to update."});
+    dbo.fetchAndUpdate(query,page).then((result)=>{
+        if(!result && result==={} && result === '{}'){
+            res.send({"result":"failed"});
+        }else{
+            res.send({"result":"successful"});
         }
     });
 });
