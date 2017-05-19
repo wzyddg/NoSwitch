@@ -8,7 +8,7 @@ router.get("/one",function (req, res, next){
     var query = req.query.q;
     var page = req.query.p;
     if(!page){
-        page = 0;
+        page = "0";
     }
 
     dbo.fetchAndUpdate(query,page).then((result)=>{

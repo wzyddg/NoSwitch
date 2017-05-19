@@ -7,7 +7,7 @@ router.get("/",function (req, res, next) {
     var query = req.query.q;
     var page = req.query.p;
     if(!page){
-        page = 0;
+        page = "0";
     }
 
     res.writeHead(200,{'Content-Type' : 'application/json'});
@@ -27,14 +27,31 @@ router.get("/",function (req, res, next) {
         res.write({"result":"server error"});
         res.end();
     });
+
+    for(var i=1;i<5;i++){
+        checkAndFill(query, ""+(parseInt(page)+i));
+    }
 });
+
+function checkAndFill(query, page) {
+    return dao.find(query, page).then((result)=>{
+        if(!result){
+            return dbo.fetchAndInsert(query,page)
+        }else {
+            return result;
+        }
+    }).catch((error)=>{
+        console.log("ERRRRRR"+error);
+        return error;
+    });
+}
 
 router.get("/force_fetch",function (req, res, next){
     // fetch new content. find it. if exist update, else insert. return content.
     var query = req.query.q;
     var page = req.query.p;
     if(!page){
-        page = 0;
+        page = "0";
     }
 
     res.writeHead(200,{'Content-Type' : 'application/json'});
