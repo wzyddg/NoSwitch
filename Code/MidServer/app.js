@@ -24,6 +24,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/search', search);
+app.use('/remoteserver', search);
 app.use('/update', update);
 
 // catch 404 and forward to error handler
