@@ -25,16 +25,16 @@ public class NoSwitchHttpQueryBuilder {
 	private serverType server = serverType.RootServer;
 	private queryFunction function = queryFunction.Search;
 
-	public static void main(String[] args) throws UnsupportedEncodingException {
+	public static void main(String[] args) throws UnsupportedOperationException, Exception {
 		// TODO Auto-generated method stub
 		NoSwitchHttpQueryBuilder builder = new NoSwitchHttpQueryBuilder();
 		builder.setLanguage("Java");
 		builder.setPage(5);
 		builder.setSearchTerm("(JSON AND i++)");
-		builder.setFunction(queryFunction.UpdateOne);
+		builder.setFunction(queryFunction.Search);
 		builder.setServer(serverType.MiddleServer);
 		NoSwitchHttpQuery query = builder.build();
-		System.out.println(query);
+		System.out.println(query.sendRequest());;
 	}
 
 	private static void parseConfig() {
@@ -94,6 +94,9 @@ public class NoSwitchHttpQueryBuilder {
 			break;
 		}
 		url = url+funcStr+paramsStr;
+		if(!url.startsWith("http")){
+			url = "http://"+url;
+		}
 		NoSwitchHttpQuery query = new NoSwitchHttpQuery(url);
 		return query;
 	}

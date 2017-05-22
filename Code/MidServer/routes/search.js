@@ -10,20 +10,25 @@ router.get("/",function (req, res, next) {
         page = "0";
     }
 
-    res.writeHead(200,{'Content-Type' : 'application/json'});
     dao.find(query, page).then((result)=>{
         if(result){
+            res.writeHead(200,{'Content-Type' : 'application/json'});
             res.write(result.content);
             res.end();
         }else{
             return dbo.fetchAndInsert(query,page).then((data)=>{
-                res.write(data);
+                if(data.toString().indexOf('RequestError')!=-1){
+                    res.writeHead(500,{'Content-Type' : 'text/plain'});
+                }else {
+                    res.writeHead(200,{'Content-Type' : 'application/json'});
+                }
+                res.write(data.toString());
                 res.end();
             })
         }
     }).catch((error)=>{
         console.log(error);
-        res.writeHead(500,{'Content-Type' : 'application/json'});
+        res.writeHead(500,{'Content-Type' : 'text/plain'});
         res.write({"result":"server error"});
         res.end();
     });
@@ -54,22 +59,31 @@ router.get("/force_fetch",function (req, res, next){
         page = "0";
     }
 
-    res.writeHead(200,{'Content-Type' : 'application/json'});
     dao.find(query, page).then((result)=>{
         if(result){
             return dbo.fetchAndUpdate(query,page).then((data)=>{
-                res.write(data);
+                if(data.toString().indexOf('RequestError')!=-1){
+                    res.writeHead(500,{'Content-Type' : 'text/plain'});
+                }else {
+                    res.writeHead(200,{'Content-Type' : 'application/json'});
+                }
+                res.write(data.toString());
                 res.end();
             })
         }else{
             return dbo.fetchAndInsert(query,page).then((data)=>{
-                res.write(data);
+                if(data.toString().indexOf('RequestError')!=-1){
+                    res.writeHead(500,{'Content-Type' : 'text/plain'});
+                }else {
+                    res.writeHead(200,{'Content-Type' : 'application/json'});
+                }
+                res.write(data.toString());
                 res.end();
             })
         }
     }).catch((error)=>{
         console.log(error);
-        res.writeHead(500,{'Content-Type' : 'application/json'});
+        res.writeHead(500,{'Content-Type' : 'text/plain'});
         res.write({"result":"server error"});
         res.end();
     });
