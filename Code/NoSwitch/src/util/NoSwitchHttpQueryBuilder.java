@@ -31,7 +31,8 @@ public class NoSwitchHttpQueryBuilder {
 		builder.setLanguage("Java");
 		builder.setPage(5);
 		builder.setSearchTerm("(JSON AND i++)");
-		builder.setServer(serverType.RootServer);
+		builder.setFunction(queryFunction.UpdateOne);
+		builder.setServer(serverType.MiddleServer);
 		NoSwitchHttpQuery query = builder.build();
 		System.out.println(query);
 	}
@@ -69,10 +70,31 @@ public class NoSwitchHttpQueryBuilder {
 		if (server.equals(serverType.RootServer)) {
 			url = url + rootServerUrl;
 			url = url + getEncodedParamsString(searchTerm, language, page);
-			System.out.println(url);
+			return new NoSwitchHttpQuery(url);
 		}
+		url =url +midServerUrl;
+		String funcStr = "";
+		String paramsStr = getEncodedParamsString(searchTerm, language, page);
+		switch (function) {
+		case Search:
+			funcStr = "/search";
+			break;
+		case ForceFetch:
+			funcStr = "/search/force_fetch";
+			break;
+		case UpdateAll:
+			funcStr = "/update/all";
+			paramsStr = "";
+			break;
+		case UpdateOne:
+			funcStr = "/update/one";
+			break;
+
+		default:
+			break;
+		}
+		url = url+funcStr+paramsStr;
 		NoSwitchHttpQuery query = new NoSwitchHttpQuery(url);
-		System.out.println(query);
 		return query;
 	}
 
