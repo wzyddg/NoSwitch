@@ -3,11 +3,15 @@ package util;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+
+import net.sf.json.JSONObject;
 
 public class NoSwitchHttpQuery {
 	private String url = "";
@@ -15,6 +19,12 @@ public class NoSwitchHttpQuery {
 	public NoSwitchHttpQuery(String URL) {
 		// TODO Auto-generated constructor stub
 		this.url = URL;
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(66666);
+		JSONObject aa = JSONObject.fromObject("{\"result\":\"successful\"}");
+		System.out.println(aa.get("result"));
 	}
 	
 	@Override
@@ -25,7 +35,11 @@ public class NoSwitchHttpQuery {
 	
 	public String sendRequest() throws UnsupportedOperationException, Exception {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
-		HttpUriRequest request = new HttpGet(url);
+
+		RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(20000).setConnectTimeout(20000).setConnectionRequestTimeout(20000).build();
+		
+		HttpGet request = new HttpGet(url);
+		request.setConfig(requestConfig);
 		CloseableHttpResponse response = httpClient.execute(request);
 		return ReadInputStream(response.getEntity().getContent());
 	}

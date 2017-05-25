@@ -3,28 +3,51 @@ package noswitch.parts;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
+
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.conn.HttpHostConnectException;
 import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.services.IServiceConstants;
-import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-public class SampleView {
+import net.sf.json.JSONObject;
+import util.NoSwitchHttpQuery;
+import util.NoSwitchHttpQueryBuilder;
+import util.NoSwitchHttpQueryBuilder.queryFunction;
+import util.NoSwitchHttpQueryBuilder.serverType;
 
+public class SampleView {
+	Text termText;
+	Text pageText;
+	Text langText;
+	Button query;
+	Button midCheck;
+	Button forceCheck;
+	Button updateOne;
+	Button updateAll;
+	
+	Composite root;
+	
 	@PostConstruct
 	public void createPartControl(Composite parent) {
+		root = parent;
 		GridLayout parentLayout = new GridLayout(8, false);
 		parent.setLayout(parentLayout);
 		prepareWidgets(parent);
+		addListeners();
 	}
 
 	@Focus
@@ -42,7 +65,7 @@ public class SampleView {
 		termLabel.setText("搜索条件:");
 		termLabel.setLayoutData(labelData);
 		
-		Text termText = new Text(parent, SWT.BORDER);
+		termText = new Text(parent, SWT.BORDER);
 		GridData termTextData = new GridData();
 		termTextData.horizontalSpan = 6;
 		termTextData.widthHint = 400;
@@ -67,15 +90,22 @@ public class SampleView {
 		normalTextData.horizontalSpan = 2;
 		normalTextData.widthHint = 150;
 		
-		Text pageText = new Text(parent, SWT.BORDER);
+		pageText = new Text(parent, SWT.BORDER);
 		pageText.setLayoutData(normalTextData);
+		pageText.addVerifyListener(new VerifyListener() {
+			public void verifyText(VerifyEvent arg0) {
+				// TODO Auto-generated method stub
+				boolean b = ("0123456789".indexOf(arg0.text)>=0);     
+				arg0.doit = b; 
+			}
+		});
 		
 		Label langLabel = new Label(parent, SWT.NONE);
 		langLabel.setAlignment(SWT.CENTER);
 		langLabel.setText("编程语言:");
 		langLabel.setLayoutData(labelData);
 		
-		Text langText = new Text(parent, SWT.BORDER);
+		langText = new Text(parent, SWT.BORDER);
 		langText.setLayoutData(normalTextData);
 		
 		GridData buttonData = new GridData();
@@ -83,7 +113,7 @@ public class SampleView {
 		buttonData.widthHint = 200;
 		buttonData.horizontalAlignment = GridData.CENTER;
 		
-		Button query = new Button(parent, SWT.NONE);
+		query = new Button(parent, SWT.NONE);
 		query.setText("开始搜索");
 		query.setLayoutData(buttonData);
 		
@@ -98,7 +128,7 @@ public class SampleView {
 //		checkData.grabExcessHorizontalSpace = true;
 //		checkData.horizontalAlignment = GridData.HORIZONTAL_ALIGN_END;
 		
-		Button midCheck = new Button(parent, SWT.CHECK|SWT.BORDER);
+		midCheck = new Button(parent, SWT.CHECK|SWT.BORDER);
 //		midCheck.setLayoutData(checkData);
 
 		Label midLabel = new Label(parent, SWT.BORDER);
@@ -106,7 +136,7 @@ public class SampleView {
 //		midLabel.setAlignment(SWT.LEFT);
 //		midLabel.setLayoutData(checkLabelData);
 		
-		Button forceCheck = new Button(parent, SWT.CHECK|SWT.BORDER);
+		forceCheck = new Button(parent, SWT.CHECK|SWT.BORDER);
 //		forceCheck.setLayoutData(checkData);
 		
 		Label forceLabel = new Label(parent, SWT.BORDER);
@@ -116,15 +146,156 @@ public class SampleView {
 		
 		new Label(parent, SWT.BORDER);new Label(parent, SWT.BORDER);
 		
-		Button updateOne = new Button(parent, SWT.NONE);
-		updateOne.setText("升级缓存服务器指定结果");
+		updateOne = new Button(parent, SWT.NONE);
+		updateOne.setText("更新缓存服务器指定结果");
 		updateOne.setLayoutData(buttonData);
 		
-		Button updateAll = new Button(parent, SWT.NONE);
-		updateAll.setText("升级缓存服务器所有结果");
+		updateAll = new Button(parent, SWT.NONE);
+		updateAll.setText("更新缓存服务器所有结果");
 		updateAll.setLayoutData(buttonData);
-	}
 		
+		midCheck.setSelection(true);
+	}
+	
+	private void addListeners() {
+		
+		query.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				NoSwitchHttpQueryBuilder builder = new NoSwitchHttpQueryBuilder();
+				builder.setServer(midCheck.getSelection()?serverType.MiddleServer:serverType.RootServer);
+				builder.setLanguage(langText.getText());
+				if(!pageText.getText().matches("[\\s]*")){
+					builder.setPage(Integer.parseInt(pageText.getText()));
+				}
+				if (termText.getText().matches("[\\s]*")) {
+					sendDialog("错误", "请输入搜索条件！");
+					return;
+				}else {
+					builder.setSearchTerm(termText.getText());
+				}
+				builder.setFunction(forceCheck.getSelection()?queryFunction.ForceFetch:queryFunction.Search);
+				try {
+					NoSwitchHttpQuery httpQuery = builder.build();
+					String result = httpQuery.sendRequest();
+					JSONObject resJson =JSONObject.fromObject(result);
+					System.out.println(result);
+				} catch (UnsupportedOperationException e) {
+					// TODO Auto-generated catch block
+					System.out.println("2222");
+					e.printStackTrace();
+				} catch (HttpHostConnectException e) {
+					// TODO Auto-generated catch block
+					System.out.println(4444);
+					sendDialog("错误", e.toString()+"\n连接服务器失败，请尝试使用另一种服务器。");
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					System.out.println("3333");
+					System.out.println(e);
+				}
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+			}
+		});
+		
+		updateAll.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				NoSwitchHttpQueryBuilder builder = new NoSwitchHttpQueryBuilder();
+				builder.setServer(serverType.MiddleServer);
+				builder.setFunction(queryFunction.UpdateAll);
+				try {
+					NoSwitchHttpQuery httpQuery = builder.build();
+					String result = httpQuery.sendRequest();
+					JSONObject resJson =JSONObject.fromObject(result);
+					if(resJson.get("result").equals("started")){
+						sendDialog("成功", "缓存服务器已经开始更新所有条目的缓存结果！");
+					}else {
+						sendDialog("失败", "未能成功开始更新所有条目的缓存结果！");
+					}
+				} catch (UnsupportedOperationException e) {
+					// TODO Auto-generated catch block
+					System.out.println("2222");
+					e.printStackTrace();
+				} catch (HttpHostConnectException e) {
+					// TODO Auto-generated catch block
+					System.out.println(4444);
+					sendDialog("错误", e.toString()+"\n连接服务器失败，请尝试使用另一种服务器。");
+				} catch (ClientProtocolException e) {
+					// TODO: handle exception
+					sendDialog("错误", e.toString()+"\n服务器地址有误，请检查。");
+				}catch (Exception e) {
+					// TODO Auto-generated catch block
+					System.out.println("3333");
+					System.out.println(e);
+				}
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		updateOne.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				NoSwitchHttpQueryBuilder builder = new NoSwitchHttpQueryBuilder();
+				builder.setServer(serverType.MiddleServer);
+				builder.setLanguage(langText.getText());
+				if(!pageText.getText().matches("[\\s]*"))
+					builder.setPage(Integer.parseInt(pageText.getText()));
+				if (termText.getText().matches("[\\s]*")) {
+					sendDialog("错误", "请输入搜索条件！");
+					return;
+				}else {
+					builder.setSearchTerm(termText.getText());
+				}
+				builder.setFunction(queryFunction.UpdateOne);
+				try {
+					NoSwitchHttpQuery httpQuery = builder.build();
+					String result = httpQuery.sendRequest();
+					JSONObject resJson =JSONObject.fromObject(result);
+					if(resJson.get("result").equals("successful")){
+						sendDialog("成功", "成功更新指定条目缓存结果！");
+					}else {
+						sendDialog("失败", "未能成功更新指定条目缓存结果！");
+					}
+				} catch (UnsupportedOperationException e) {
+					// TODO Auto-generated catch block
+					System.out.println("2222");
+					e.printStackTrace();
+				} catch (HttpHostConnectException e) {
+					// TODO Auto-generated catch block
+					System.out.println(4444);
+					sendDialog("错误", e.toString()+"\n连接服务器失败，请尝试使用另一种服务器。");
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					System.out.println("3333");
+					System.out.println(e);
+				}
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+	}
+	
+	private void sendDialog(String title, String message) {
+		MessageDialog.openInformation(root.getShell(), title, message);
+	}	
 	/**
 	 * This method manages the selection of your current object. In this example
 	 * we listen to a single Object (even the ISelection already captured in E3

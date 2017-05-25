@@ -3,6 +3,9 @@ package util;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
+import util.NoSwitchHttpQueryBuilder.queryFunction;
+import util.NoSwitchHttpQueryBuilder.serverType;
+
 public class NoSwitchHttpQueryBuilder {
 	static {
 		parseConfig();
@@ -17,7 +20,7 @@ public class NoSwitchHttpQueryBuilder {
 	}
 
 	private String midServerUrl = "localhost:3000";
-	private String rootServerUrl = "localhost:3000/remoteserver";
+	private String rootServerUrl = "https://searchcode.com/api/codesearch_I/";
 
 	private String searchTerm = "";
 	private String language = "";
@@ -28,13 +31,22 @@ public class NoSwitchHttpQueryBuilder {
 	public static void main(String[] args) throws UnsupportedOperationException, Exception {
 		// TODO Auto-generated method stub
 		NoSwitchHttpQueryBuilder builder = new NoSwitchHttpQueryBuilder();
+		
+//		builder.setLanguage("Java");
+//		builder.setPage(5);
+//		builder.setSearchTerm("(JSON AND i++)");
+//		builder.setFunction(queryFunction.Search);
+//		builder.setServer(serverType.MiddleServer);
+		
+		builder.setServer(serverType.RootServer);
 		builder.setLanguage("Java");
-		builder.setPage(5);
+		builder.setPage(0);
 		builder.setSearchTerm("(JSON AND i++)");
 		builder.setFunction(queryFunction.Search);
-		builder.setServer(serverType.MiddleServer);
+		
 		NoSwitchHttpQuery query = builder.build();
-		System.out.println(query.sendRequest());;
+		System.out.println(query);
+		System.out.println(query.sendRequest());
 	}
 
 	private static void parseConfig() {
@@ -103,7 +115,7 @@ public class NoSwitchHttpQueryBuilder {
 
 	private String getEncodedParamsString(String term, String lang, int page) throws UnsupportedEncodingException {
 		String encodedParams = "?q=" + URLEncoder.encode(term, "utf-8");
-		if (lang != null && !"".equals(lang)) {
+		if (lang != null && !lang.matches("[\\s]*")) {
 			encodedParams = encodedParams + URLEncoder.encode(" lang:" + language, "utf-8");
 		}
 		encodedParams = encodedParams + "&p=" + page;
