@@ -3,7 +3,6 @@ package noswitch.parts;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
-
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.conn.HttpHostConnectException;
 import org.eclipse.e4.core.di.annotations.Optional;
@@ -38,6 +37,8 @@ public class SampleView {
 	Button forceCheck;
 	Button updateOne;
 	Button updateAll;
+	Button lastPage;
+	Button nextPage;
 	
 	Composite root;
 	
@@ -154,47 +155,120 @@ public class SampleView {
 		updateAll.setText("更新缓存服务器所有结果");
 		updateAll.setLayoutData(buttonData);
 		
+		GridData pageButtonData = new GridData();
+		pageButtonData.horizontalSpan = 2;
+		pageButtonData.widthHint = 100;
+		pageButtonData.horizontalAlignment = GridData.CENTER;
+		
+		lastPage = new Button(parent, SWT.NONE);
+		lastPage.setText("上一页");
+		lastPage.setLayoutData(pageButtonData);
+		
+		nextPage = new Button(parent, SWT.NONE);
+		nextPage.setText("下一页");
+		nextPage.setLayoutData(pageButtonData);
+		
 		midCheck.setSelection(true);
+		
+//		Button updown = new Button(parent, SWT.NONE);
+//		updown.addSelectionListener(new SelectionListener() {
+//			
+//			@Override
+//			public void widgetSelected(SelectionEvent arg0) {
+//				// TODO Auto-generated method stub
+//				tipData.heightHint = 30-tipData.heightHint;
+//				root.layout();
+//			}
+//			
+//			@Override
+//			public void widgetDefaultSelected(SelectionEvent arg0) {
+//				// TODO Auto-generated method stub
+//				
+//			}
+//		});
+	}
+	
+	public void queryFunction() {
+		NoSwitchHttpQueryBuilder builder = new NoSwitchHttpQueryBuilder();
+		builder.setServer(midCheck.getSelection()?serverType.MiddleServer:serverType.RootServer);
+		builder.setLanguage(langText.getText());
+		if(!pageText.getText().matches("[\\s]*")){
+			builder.setPage(Integer.parseInt(pageText.getText()));
+		}
+		if (termText.getText().matches("[\\s]*")) {
+			sendDialog("错误", "请输入搜索条件！");
+			return;
+		}else {
+			builder.setSearchTerm(termText.getText());
+		}
+		builder.setFunction(forceCheck.getSelection()?queryFunction.ForceFetch:queryFunction.Search);
+		try {
+			NoSwitchHttpQuery httpQuery = builder.build();
+			String result = httpQuery.sendRequest();
+			JSONObject resJson =JSONObject.fromObject(result);
+			System.out.println(result);
+		} catch (UnsupportedOperationException e) {
+			// TODO Auto-generated catch block
+			System.out.println("2222");
+			e.printStackTrace();
+		} catch (HttpHostConnectException e) {
+			// TODO Auto-generated catch block
+			System.out.println(4444);
+			sendDialog("错误", e.toString()+"\n连接服务器失败，请尝试使用另一种服务器。");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("3333");
+			System.out.println(e);
+		}
 	}
 	
 	private void addListeners() {
+		nextPage.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				int page =0;
+				if(!pageText.getText().matches("[\\s]*")){
+					page = Integer.parseInt(pageText.getText());
+				}
+				pageText.setText(""+(page+1));
+				queryFunction();
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		lastPage.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				int page =0;
+				if(!pageText.getText().matches("[\\s]*")){
+					page = Integer.parseInt(pageText.getText());
+				}
+				pageText.setText(""+(page-1));
+				queryFunction();
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
 		
 		query.addSelectionListener(new SelectionListener() {
 			
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				// TODO Auto-generated method stub
-				NoSwitchHttpQueryBuilder builder = new NoSwitchHttpQueryBuilder();
-				builder.setServer(midCheck.getSelection()?serverType.MiddleServer:serverType.RootServer);
-				builder.setLanguage(langText.getText());
-				if(!pageText.getText().matches("[\\s]*")){
-					builder.setPage(Integer.parseInt(pageText.getText()));
-				}
-				if (termText.getText().matches("[\\s]*")) {
-					sendDialog("错误", "请输入搜索条件！");
-					return;
-				}else {
-					builder.setSearchTerm(termText.getText());
-				}
-				builder.setFunction(forceCheck.getSelection()?queryFunction.ForceFetch:queryFunction.Search);
-				try {
-					NoSwitchHttpQuery httpQuery = builder.build();
-					String result = httpQuery.sendRequest();
-					JSONObject resJson =JSONObject.fromObject(result);
-					System.out.println(result);
-				} catch (UnsupportedOperationException e) {
-					// TODO Auto-generated catch block
-					System.out.println("2222");
-					e.printStackTrace();
-				} catch (HttpHostConnectException e) {
-					// TODO Auto-generated catch block
-					System.out.println(4444);
-					sendDialog("错误", e.toString()+"\n连接服务器失败，请尝试使用另一种服务器。");
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					System.out.println("3333");
-					System.out.println(e);
-				}
+				queryFunction();
 			}
 			
 			@Override

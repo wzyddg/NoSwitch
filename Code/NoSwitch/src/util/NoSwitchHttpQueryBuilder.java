@@ -3,9 +3,6 @@ package util;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
-import util.NoSwitchHttpQueryBuilder.queryFunction;
-import util.NoSwitchHttpQueryBuilder.serverType;
-
 public class NoSwitchHttpQueryBuilder {
 	static {
 		parseConfig();
