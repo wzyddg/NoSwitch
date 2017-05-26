@@ -15,3 +15,13 @@ Require-Bundle: javax.inject,
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Import-Package: javax.annotation;version="1.2.0"
 Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: lib/commons-beanutils-1.8.0.jar,
+ lib/commons-codec-1.9.jar,
+ lib/commons-collections-3.2.1.jar,
+ lib/commons-lang-2.5.jar,
+ lib/commons-logging-1.2.jar,
+ lib/ezmorph-1.0.6.jar,
+ lib/httpclient-4.5.2.jar,
+ lib/httpcore-4.4.4.jar,
+ lib/json-lib-2.4-jdk15.jar,
+ .

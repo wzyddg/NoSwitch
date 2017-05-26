@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
 
 import net.sf.json.JSONArray;
@@ -268,14 +269,22 @@ public class SampleView {
 				button.actualButton.setLayoutData(buttonData);
 				Label repo = new Label(contentComposite, SWT.NONE);
 				repo.setText(file.getString("name"));
+				repo.setForeground(new Color(Display.getDefault(), 78, 211, 100));
 				Label fileName = new Label(contentComposite, SWT.NONE);
 				fileName.setText(file.getString("filename"));
-				Label link = new Label(contentComposite, SWT.NONE);
-				link.setText(file.getString("repo"));
+				
+//				Label linkL = new Label(contentComposite, SWT.NONE);
+//				linkL.setText(file.getString("repo"));
+				
+				Link link = new Link(contentComposite, SWT.NONE);
+				link.setText("<a>"+file.getString("repo")+"</a>");
+				
 				Label count = new Label(contentComposite, SWT.NONE);
 				count.setText(file.getString("linescount"));
+				count.setForeground(new Color(Display.getDefault(), 211, 86, 78));
 				Label lang = new Label(contentComposite, SWT.NONE);
 				lang.setText(file.getString("language"));
+				lang.setForeground(new Color(Display.getDefault(), 53, 211, 200));
 				new Label(contentComposite, SWT.NONE).setLayoutData(nullData);
 				new Label(contentComposite, SWT.NONE).setLayoutData(nullData);
 				
@@ -308,6 +317,7 @@ public class SampleView {
 					Label thisNum = new Label(lines, SWT.NONE);
 					thisNum.setText(""+integer);
 					thisNum.setLayoutData(lineNumData);
+					thisNum.setForeground(new Color(Display.getDefault(), 129, 107, 163));
 					
 					GridData lineData = new GridData();
 					lineData.heightHint = 15;
@@ -316,6 +326,7 @@ public class SampleView {
 					thisLine.setText(lineContent);
 					lineData.widthHint = thisLine.computeSize(SWT.DEFAULT, SWT.DEFAULT).x+4;
 					thisLine.setLayoutData(lineData);
+					thisLine.setForeground(new Color(Display.getDefault(), 10, 128, 10));
 				}
 				contentData.widthHint = lines.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
 				button.setComposites(lines,scrolledComposite);
