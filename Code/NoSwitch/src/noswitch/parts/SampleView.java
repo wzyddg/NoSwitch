@@ -11,10 +11,13 @@ import org.eclipse.e4.ui.services.IServiceConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -41,6 +44,8 @@ public class SampleView {
 	Button nextPage;
 	
 	Composite root;
+	Composite linesComposite;
+	ScrolledComposite scrolledComposite;
 	
 	@PostConstruct
 	public void createPartControl(Composite parent) {
@@ -96,7 +101,7 @@ public class SampleView {
 		pageText.addVerifyListener(new VerifyListener() {
 			public void verifyText(VerifyEvent arg0) {
 				// TODO Auto-generated method stub
-				boolean b = ("0123456789".indexOf(arg0.text)>=0);     
+				boolean b = (arg0.text.matches("[0123456789]*"));     
 				arg0.doit = b; 
 			}
 		});
@@ -170,22 +175,54 @@ public class SampleView {
 		
 		midCheck.setSelection(true);
 		
-//		Button updown = new Button(parent, SWT.NONE);
-//		updown.addSelectionListener(new SelectionListener() {
-//			
-//			@Override
-//			public void widgetSelected(SelectionEvent arg0) {
-//				// TODO Auto-generated method stub
-//				tipData.heightHint = 30-tipData.heightHint;
-//				root.layout();
-//			}
-//			
-//			@Override
-//			public void widgetDefaultSelected(SelectionEvent arg0) {
-//				// TODO Auto-generated method stub
-//				
-//			}
-//		});
+		Composite fatherComposite = new Composite(parent, SWT.NONE);
+		fatherComposite.setLayout(new FillLayout());
+		GridData fatherData = new GridData();
+		fatherData.horizontalSpan = 8;
+		fatherData.widthHint = 720;
+		fatherData.heightHint = 240;
+		fatherData.horizontalAlignment = GridData.HORIZONTAL_ALIGN_BEGINNING;
+		fatherData.verticalAlignment = GridData.VERTICAL_ALIGN_BEGINNING;
+		fatherComposite.setLayoutData(fatherData);
+		scrolledComposite = new ScrolledComposite(fatherComposite, SWT.NONE | SWT.H_SCROLL | SWT.V_SCROLL);
+		scrolledComposite.setExpandHorizontal(true);
+		scrolledComposite.setExpandVertical(true);
+		scrolledComposite.setAlwaysShowScrollBars(true);
+		
+		updateContentUI(null);
+//		//load a new composite
+//		linesComposite= new Composite(scrolledComposite, SWT.NONE);
+//		linesComposite.setLayout(new GridLayout(8,true));
+//		
+//		//feed data
+//		for(int i=0;i<100;i++){
+//			new Button(linesComposite, SWT.NONE);
+//		}
+//		scrolledComposite.setContent(linesComposite);
+//		
+//		//set size
+//		Point size = linesComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+//		scrolledComposite.setMinWidth(size.x);
+//		scrolledComposite.setMinHeight(size.y);
+		
+	}
+	
+	public void updateContentUI(JSONObject results) {
+		if(linesComposite!=null)
+			linesComposite.dispose();
+		linesComposite = new Composite(scrolledComposite, SWT.NONE);
+		linesComposite.setLayout(new GridLayout(8,true));
+		
+		//feed
+		for(int i=0;i<100;i++){
+			new Button(linesComposite, SWT.NONE).setText(pageText.getText());;
+		}
+		//feed over
+		
+		scrolledComposite.setContent(linesComposite);
+		Point size = linesComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+		scrolledComposite.setMinWidth(size.x);
+		scrolledComposite.setMinHeight(size.y);
 	}
 	
 	public void queryFunction() {
@@ -206,7 +243,9 @@ public class SampleView {
 			NoSwitchHttpQuery httpQuery = builder.build();
 			String result = httpQuery.sendRequest();
 			JSONObject resJson =JSONObject.fromObject(result);
+			pageText.setText(""+resJson.getString("page"));
 			System.out.println(result);
+			updateContentUI(resJson);
 		} catch (UnsupportedOperationException e) {
 			// TODO Auto-generated catch block
 			System.out.println("2222");
