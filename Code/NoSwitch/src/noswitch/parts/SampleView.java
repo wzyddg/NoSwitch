@@ -295,7 +295,7 @@ public class SampleView {
 				contentData.horizontalSpan = 7;
 				lines.setLayoutData(contentData);
 				lines.setBackground(new Color(Display.getCurrent(), 225, 225, 225));
-//				
+
 //				//add lines
 				lines.setLayout(new GridLayout(2, false));
 				JSONObject linesJSON = file.getJSONObject("lines");

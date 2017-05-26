@@ -47,7 +47,7 @@ public class NoSwitchHttpQueryBuilder {
 	}
 
 	private static void parseConfig() {
-		System.out.println("parse");
+		//set midServerUrl and rootServerUrl here.
 	}
 
 	public void setSearchTerm(String searchTerm) {

@@ -19,7 +19,6 @@ public class DetailButton {
 
 	public DetailButton(Composite parent, int style) {
 		actualButton = new Button(parent, style);
-		// TODO Auto-generated constructor stub
 	}
 
 	public Composite getLines() {
