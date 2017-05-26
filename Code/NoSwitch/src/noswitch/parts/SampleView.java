@@ -1,8 +1,13 @@
 package noswitch.parts;
 
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
+
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.conn.HttpHostConnectException;
 import org.eclipse.e4.core.di.annotations.Optional;
@@ -16,15 +21,18 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import util.NoSwitchHttpQuery;
 import util.NoSwitchHttpQueryBuilder;
@@ -32,6 +40,8 @@ import util.NoSwitchHttpQueryBuilder.queryFunction;
 import util.NoSwitchHttpQueryBuilder.serverType;
 
 public class SampleView {
+	int currentPage = -1;
+	
 	Text termText;
 	Text pageText;
 	Text langText;
@@ -44,7 +54,7 @@ public class SampleView {
 	Button nextPage;
 	
 	Composite root;
-	Composite linesComposite;
+	Composite contentComposite;
 	ScrolledComposite scrolledComposite;
 	
 	@PostConstruct
@@ -208,19 +218,113 @@ public class SampleView {
 	}
 	
 	public void updateContentUI(JSONObject results) {
-		if(linesComposite!=null)
-			linesComposite.dispose();
-		linesComposite = new Composite(scrolledComposite, SWT.NONE);
-		linesComposite.setLayout(new GridLayout(8,true));
+		if(contentComposite!=null)
+			contentComposite.dispose();
+		contentComposite = new Composite(scrolledComposite, SWT.NONE);
+		contentComposite.setLayout(new GridLayout(8,false));
+		contentComposite.setBackground(new Color(Display.getCurrent(), 240, 240, 240));
+		
+		GridData labelData = new GridData();
+		labelData.grabExcessHorizontalSpace = true;
+		labelData.widthHint = 100;
+		
+		GridData buttonData = new GridData();
+		buttonData.widthHint = 36;
+		
+		GridData nullData = new GridData();
+		nullData.widthHint = 0;
+		nullData.heightHint = 0;
+		
+		Button placeButton = new Button(contentComposite, SWT.NONE);
+		placeButton.setLayoutData(buttonData);
+		placeButton.setText("+");
+		placeButton.setVisible(false);
+		Label repoLabel = new Label(contentComposite, SWT.NONE);
+		repoLabel.setText("仓库名");
+		repoLabel.setLayoutData(labelData);
+		Label fileLabel = new Label(contentComposite, SWT.NONE);
+		fileLabel.setText("文件");
+		fileLabel.setLayoutData(labelData);
+		Label linkLabel = new Label(contentComposite, SWT.NONE);
+		linkLabel.setText("仓库链接");
+		linkLabel.setLayoutData(labelData);
+		Label lineCountLabel = new Label(contentComposite, SWT.NONE);
+		lineCountLabel.setText("代码行数");
+		lineCountLabel.setLayoutData(labelData);
+		Label langLabel = new Label(contentComposite, SWT.NONE);
+		langLabel.setText("语言");
+		langLabel.setLayoutData(labelData);
+		
+		new Label(contentComposite, SWT.NONE).setLayoutData(nullData);
+		new Label(contentComposite, SWT.NONE).setLayoutData(nullData);
 		
 		//feed
-		for(int i=0;i<100;i++){
-			new Button(linesComposite, SWT.NONE).setText(pageText.getText());;
+		if(results!=null){
+			JSONArray files = results.getJSONArray("results");
+			for(int i=0;i<files.size();i++){
+				//infos
+				JSONObject file = files.getJSONObject(i);
+				DetailButton button = new DetailButton(contentComposite, SWT.NONE);
+				button.actualButton.setLayoutData(buttonData);
+				Label repo = new Label(contentComposite, SWT.NONE);
+				repo.setText(file.getString("name"));
+				Label fileName = new Label(contentComposite, SWT.NONE);
+				fileName.setText(file.getString("filename"));
+				Label link = new Label(contentComposite, SWT.NONE);
+				link.setText(file.getString("repo"));
+				Label count = new Label(contentComposite, SWT.NONE);
+				count.setText(file.getString("linescount"));
+				Label lang = new Label(contentComposite, SWT.NONE);
+				lang.setText(file.getString("language"));
+				new Label(contentComposite, SWT.NONE).setLayoutData(nullData);
+				new Label(contentComposite, SWT.NONE).setLayoutData(nullData);
+				
+				//prepare lines composite
+				new Label(contentComposite, SWT.NONE).setLayoutData(nullData);
+				Composite lines = new Composite(contentComposite, SWT.None);
+				GridData contentData = new GridData();
+				contentData.horizontalSpan = 7;
+				lines.setLayoutData(contentData);
+				lines.setBackground(new Color(Display.getCurrent(), 225, 225, 225));
+//				
+//				//add lines
+				lines.setLayout(new GridLayout(2, false));
+				JSONObject linesJSON = file.getJSONObject("lines");
+				LinkedList<Integer> lineNums = new LinkedList<>();
+				for (Iterator iterator = linesJSON.keys(); iterator.hasNext();) {
+					String object = (String) iterator.next();
+					lineNums.add(Integer.parseInt(object));
+				}
+				Collections.sort(lineNums);
+				
+				GridData lineNumData = new GridData();
+				lineNumData.widthHint = 50;
+				lineNumData.heightHint = 15;
+				
+				for (Iterator iterator = lineNums.iterator(); iterator.hasNext();) {
+					Integer integer = (Integer) iterator.next();
+					String lineContent = linesJSON.getString(""+integer);
+					
+					Label thisNum = new Label(lines, SWT.NONE);
+					thisNum.setText(""+integer);
+					thisNum.setLayoutData(lineNumData);
+					
+					GridData lineData = new GridData();
+					lineData.heightHint = 15;
+					
+					Label thisLine = new Label(lines, SWT.NONE);
+					thisLine.setText(lineContent);
+					lineData.widthHint = thisLine.computeSize(SWT.DEFAULT, SWT.DEFAULT).x+4;
+					thisLine.setLayoutData(lineData);
+				}
+				contentData.widthHint = lines.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
+				button.setComposites(lines,scrolledComposite);
+			}
 		}
 		//feed over
 		
-		scrolledComposite.setContent(linesComposite);
-		Point size = linesComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+		scrolledComposite.setContent(contentComposite);
+		Point size = contentComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 		scrolledComposite.setMinWidth(size.x);
 		scrolledComposite.setMinHeight(size.y);
 	}
@@ -244,6 +348,7 @@ public class SampleView {
 			String result = httpQuery.sendRequest();
 			JSONObject resJson =JSONObject.fromObject(result);
 			pageText.setText(""+resJson.getString("page"));
+			currentPage = Integer.parseInt(pageText.getText());
 			System.out.println(result);
 			updateContentUI(resJson);
 		} catch (UnsupportedOperationException e) {
@@ -257,7 +362,7 @@ public class SampleView {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			System.out.println("3333");
-			System.out.println(e);
+			e.printStackTrace();
 		}
 	}
 	
@@ -267,11 +372,9 @@ public class SampleView {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				// TODO Auto-generated method stub
-				int page =0;
-				if(!pageText.getText().matches("[\\s]*")){
-					page = Integer.parseInt(pageText.getText());
-				}
-				pageText.setText(""+(page+1));
+				if(currentPage<0)
+					return;
+				pageText.setText(""+(currentPage+1));
 				queryFunction();
 			}
 			
@@ -287,11 +390,9 @@ public class SampleView {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				// TODO Auto-generated method stub
-				int page =0;
-				if(!pageText.getText().matches("[\\s]*")){
-					page = Integer.parseInt(pageText.getText());
-				}
-				pageText.setText(""+(page-1));
+				if(currentPage<0)
+					return;
+				pageText.setText(""+(currentPage-1));
 				queryFunction();
 			}
 			
